@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int           @id @default(autoincrement())
+  bio         String        @default("")
+  username    String        @unique
+  phone       String
+  password    String
+  avatar      String        @default("https://live.staticflickr.com/60/219874595_5e48aaafac.jpg")
+  verified    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Post        Post[]
+  Like        Like[]
+  Tag         Tag[]
+  Mention     Mention[]
+  Comment     Comment[]
+  CommentLike CommentLike[]
+  ReplyLike   ReplyLike[]
+  Follow      Follow[]
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  image     String
+  location  String
+  caption   String    @default("")
+  creatorId Int
+  creator   User      @relation(fields: [creatorId], references: [id]) //many to one
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Like      Like[]
+  Tag       Tag[]
+  Mention   Mention[]
+  Hashtag   Hashtag[]
+  Comment   Comment[]
+}
+
+model Tag {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  point_x   Int //tagged postion in pixels on the photo
+  point_y   Int
+  tagged_id Int
+  tagged    User     @relation(fields: [tagged_id], references: [id])
+}
+
+model Like {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  postId      Int
+  post        Post     @relation(fields: [postId], references: [id]) //many to many
+  liked_by_id Int
+  liked_by    User     @relation(fields: [liked_by_id], references: [id]) //many to one
+
+  @@unique([postId, liked_by_id])
+}
+
+model Mention {
+  id                Int      @id @default(autoincrement())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  postId            Int
+  post              Post     @relation(fields: [postId], references: [id])
+  mentioned_user_id Int
+  mentioned         User     @relation(fields: [mentioned_user_id], references: [id])
+}
+
+model Hashtag {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+}
+
+model Comment {
+  id           Int           @id @default(autoincrement())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  content      String
+  postId       Int
+  post         Post          @relation(fields: [postId], references: [id])
+  commenter_id Int
+  commenter    User          @relation(fields: [commenter_id], references: [id])
+  Reply        Reply[]
+  CommentLike  CommentLike[]
+  ReplyLike    ReplyLike[]
+}
+
+model CommentLike {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  comment_id      Int
+  comment         Comment  @relation(fields: [comment_id], references: [id]) //many to many
+  commented_by_id Int
+  commented_by    User     @relation(fields: [commented_by_id], references: [id])
+
+  @@unique([comment_id, commented_by_id])
+}
+
+model Reply {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  comment_id Int
+  comment    Comment  @relation(fields: [comment_id], references: [id])
+}
+
+model ReplyLike {
+  id            Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  reply_id      Int
+  reply         Comment  @relation(fields: [reply_id], references: [id])
+  replyed_by_id Int
+  replyed_by    User     @relation(fields: [replyed_by_id], references: [id])
+
+  @@unique([reply_id, replyed_by_id])
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  leader_id   Int // no reference to the user
+  // leader User @relation("Leader",fields: [leader_id],references: [id])
+  follower_id Int
+  follower    User     @relation(fields: [follower_id], references: [id])
+
+  @@unique([follower_id, leader_id]) // there should only be one to one realation here.
+}
