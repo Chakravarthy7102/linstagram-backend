@@ -18,7 +18,7 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async login(dto: LoginDto): Promise<GenericResponse> {
+  async login(dto: LoginDto): Promise<GenericResponse<Record<string, string>>> {
     try {
       const user = await this.prisma.user.findFirst({
         where: {
@@ -50,7 +50,9 @@ export class AuthService {
     }
   }
 
-  async register(dto: RegisterDto): Promise<GenericResponse> {
+  async register(
+    dto: RegisterDto,
+  ): Promise<GenericResponse<Record<string, string>>> {
     try {
       const hash = await argon.hash(dto.password);
 

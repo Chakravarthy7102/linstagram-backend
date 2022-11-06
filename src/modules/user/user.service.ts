@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/_prisma/prisma.service';
-import { User } from '@prisma/client';
+import { Follow, User } from '@prisma/client';
 import { GenericResponse } from 'src/consts/generic_response';
 import { Payload } from 'src/types';
 import { FollowQuery, UpdateBio } from './dto';
@@ -9,9 +9,7 @@ import { FollowQuery, UpdateBio } from './dto';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getUser(
-    payload: Payload,
-  ): Promise<Omit<GenericResponse, 'data'> & { data: User }> {
+  async getUser(payload: Payload): Promise<GenericResponse<User>> {
     try {
       const user = await this.prisma.user.findFirst({
         where: {
@@ -33,7 +31,10 @@ export class UserService {
     }
   }
 
-  async follow(payload: Payload, query: FollowQuery): Promise<GenericResponse> {
+  async follow(
+    payload: Payload,
+    query: FollowQuery,
+  ): Promise<GenericResponse<Follow>> {
     try {
       const following = await this.prisma.follow.create({
         data: {
@@ -59,7 +60,7 @@ export class UserService {
   async unFollow(
     payload: Payload,
     query: FollowQuery,
-  ): Promise<GenericResponse> {
+  ): Promise<GenericResponse<null>> {
     try {
       const following = await this.prisma.follow.findFirst({
         where: {
@@ -100,7 +101,7 @@ export class UserService {
   async updateBio(
     { userId }: Payload,
     { bio }: UpdateBio,
-  ): Promise<Omit<GenericResponse, 'data'> & { data: string }> {
+  ): Promise<GenericResponse<string>> {
     try {
       const { bio: updatedBio } = await this.prisma.user.update({
         where: {

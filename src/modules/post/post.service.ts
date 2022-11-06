@@ -1,5 +1,9 @@
-import { NotFoundException, Injectable } from '@nestjs/common';
-import { Post, User } from '@prisma/client';
+import {
+  NotFoundException,
+  Injectable,
+  ForbiddenException,
+} from '@nestjs/common';
+import { Post } from '@prisma/client';
 import { static_file_base_url } from 'src/consts/constants';
 import { GenericResponse } from 'src/consts/generic_response';
 import { Payload } from 'src/types';
@@ -142,8 +146,64 @@ export class PostService {
           status: 'error',
         };
       }
+
+      const like = {
+        postId: Number(postId),
+        liked_by_id: user.userId,
+      };
+
+      await this.prisma.like.create({
+        data: {
+          ...like,
+        },
+      });
+
+      return {
+        data: null,
+        message: 'liked the post',
+        status: 'ok',
+      };
     } catch (error) {
-      throw error;
+      throw new ForbiddenException({ message: 'You already liked this post' });
+    }
+  }
+
+  async unlike(
+    likeId: string,
+    postId: string,
+    user: Payload,
+  ): Promise<GenericResponse<null>> {
+    try {
+      const post = await this.prisma.post.findFirst({
+        where: {
+          id: parseInt(postId),
+        },
+      });
+
+      if (!post) {
+        return {
+          data: null,
+          message: 'post not found',
+          status: 'error',
+        };
+      }
+
+      await this.prisma.like.deleteMany({
+        where: {
+          id: parseInt(likeId),
+        },
+      });
+
+      return {
+        data: null,
+        message: 'Unliked the post',
+        status: 'ok',
+      };
+    } catch (error) {
+      console.log('err', error);
+      throw new ForbiddenException({
+        message: 'Forbidden request',
+      });
     }
   }
 }
