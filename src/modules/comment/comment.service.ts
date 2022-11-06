@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { Comment, CommentLike } from '@prisma/client';
 import { GenericResponse } from 'src/consts/generic_response';
-import { CommonConnectionOptions } from 'tls';
 import { PrismaService } from '../_prisma/prisma.service';
 
 export interface CommentBody {
